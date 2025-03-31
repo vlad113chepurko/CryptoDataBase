@@ -15,10 +15,15 @@ server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind((PATH, PORT))
 server.listen(1)
 
-print("Server is running...")
+print("✅ Server is running...")
 
-conn, addr = server.accept()
-print(f"Connection from {addr} has been established!")
+try:
+    conn, addr = server.accept()
+    print(f"✅ Connection from {addr} has been established!")
+except ConnectionError:
+    print("❌ Error with connection!")
+
+
 
 # def handle_decrypted(key, nonce, ciphertext):
 #     cipher_dec = AES.new(key, AES.MODE_EAX, nonce=nonce)
@@ -33,32 +38,38 @@ def handle_received_data(data):
     ciphertext = bytes.fromhex(received_data['ciphertext'])
     login = received_data['login']
 
-    print(f"Login: {login}")
-    print(f"Password: {ciphertext}")
+    add_to_db(login, ciphertext)
 
     # handle_decrypted(key, nonce, ciphertext)
+def add_to_db(login, ciphertext):
+    try:
+        conn_db = pyodbc.connect(dsn)
+        cursor = conn_db.cursor()
+        cursor.execute("INSERT INTO Users ( Login, Password ) VALUES ( ?, ? )", (login, ciphertext))
+
+        conn_db.commit()
+        cursor.close()
+        conn_db.close()
+
+        print("✅ User was added!")
+
+    except Exception as e:
+        print(f"❌ Error: {e}")
 
 while True:
     try:
         data = conn.recv(1024)
         if not data:
-            print("Server is closing...")
+            print("✅ Server is closing...")
             break
         try:
             handle_received_data(data)
-            conn_db = pyodbc.connect(dsn)
-            cursor = conn_db.cursor()
-            cursor.execute(f"SELECT TOP 10 * FROM Users")
-            rows = cursor.fetchall()
-            for row in rows:
-                print(row)
-            cursor.close()
-            conn_db.close()
         except Exception as e:
-            print(f"Error: {e}")
+            print(f"❌ Error: {e}")
             break
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"❌ Error: {e}")
         break
+
 conn.close()
 server.close()

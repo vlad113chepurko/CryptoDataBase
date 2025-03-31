@@ -13,7 +13,7 @@ PORT = 12345
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client.connect((PATH, PORT))
 
-print("Client is running...")
+print("✅ Client is running...")
 
 # <Frame>
 root = Tk()
@@ -121,14 +121,14 @@ def submit(login, password, repeat):
 
     if login and password != '':
         if password != repeat:
-            show_message(False, 'Passwords do not match!')
+            show_message(False, '❌ Passwords do not match!')
         else:
-            show_message(True, 'Data was sent to server!')
+            show_message(True, '✅ Data was sent to server!')
             print(f"Login: {login}")
             print(f"Password: {password}")
             handle_hashing(login, password)
     else:
-        show_message(False, 'You must write login, password and repeat password!')
+        show_message(False, '❌ You must write login, password and repeat password!')
 
 
 # <Content>
