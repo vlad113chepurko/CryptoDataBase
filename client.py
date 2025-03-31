@@ -1,10 +1,10 @@
-import time
 from tkinter import *
 from tkinter import messagebox
 from tkinter import ttk
+from Crypto.Protocol.KDF import PBKDF2
 from Crypto.Cipher import AES
-from Crypto.Random import get_random_bytes
 import socket, hashlib, json
+
 
 # <Client>
 PATH = '127.0.0.1'
@@ -96,19 +96,26 @@ def show_message(state, message):
     else:
         messagebox.showerror('Error 😈', f'{message}')
 
-def encrypted_data(key, data):
+def encrypted_data(key, login, password):
     cipher = AES.new(key, AES.MODE_EAX)
     nonce = cipher.nonce
-    ciphertext, tag = cipher.encrypt_and_digest(data.encode('utf-8'))
-    data_to_send = {'key': key.hex(), 'nonce': nonce.hex(), 'ciphertext': ciphertext.hex()}
+    ciphertext, tag = cipher.encrypt_and_digest(password.encode('utf-8'))
 
+    data_to_send = {
+        'key': key.hex(),
+        'nonce': nonce.hex(),
+        'ciphertext': ciphertext.hex(),
+        'login': login
+    }
+
+    print("Sending data: ", data_to_send)
     client.send(json.dumps(data_to_send).encode())
 
-def hashed(login, password):
-    key = get_random_bytes(16)
-    data = login + password
+def handle_hashing(login, password):
+    salt = login.encode()
+    key = PBKDF2(password, salt, dkLen=16, count=100000)
     hashed_key = hashlib.sha256(key).digest()[:16]
-    encrypted_data(hashed_key, data)
+    encrypted_data(hashed_key, login, password)
 
 def submit(login, password, repeat):
 
@@ -117,7 +124,9 @@ def submit(login, password, repeat):
             show_message(False, 'Passwords do not match!')
         else:
             show_message(True, 'Data was sent to server!')
-            hashed(login, password)
+            print(f"Login: {login}")
+            print(f"Password: {password}")
+            handle_hashing(login, password)
     else:
         show_message(False, 'You must write login, password and repeat password!')
 
