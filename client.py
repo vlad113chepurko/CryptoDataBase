@@ -1,6 +1,17 @@
 from tkinter import *
 from tkinter import ttk
+import socket
 
+# <Client>
+PATH = '127.0.0.1'
+PORT = 12345
+
+client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+client.connect((PATH, PORT))
+
+print("Client is running...")
+
+# <Frame>
 root = Tk()
 root.geometry('315x400')
 root.title('Cripto')
@@ -8,6 +19,7 @@ root.title('Cripto')
 frm = ttk.Frame(root, padding=20)
 frm.grid(column=0, row=0, sticky="nsew")
 
+# <<!Function>>
 def sign_up():
 
     root.title('Sign up')
@@ -74,7 +86,7 @@ def clear_frame():
     for widget in frm.winfo_children():
         widget.destroy()
 
-
+# <Content>
 login_label = ttk.Label(frm, text='Login:', font='Arial 12')
 login_label.grid(column=0, row=0, sticky="w", pady=5)
 login_entry = ttk.Entry(frm, font='Arial 12', width=30)
@@ -97,3 +109,4 @@ SignUp = ttk.Button(frm, text="Sign up", command=sign_up)
 SignUp.grid(column=0, row=7, pady=15)
 
 root.mainloop()
+client.close()
