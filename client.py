@@ -22,6 +22,8 @@ root.title('Cripto')
 frm = ttk.Frame(root, padding=20)
 frm.grid(column=0, row=0, sticky="nsew")
 
+is_admin = False
+
 # <<!Function>>
 def sign_up():
     root.title('Sign up')
@@ -93,7 +95,7 @@ def show_message(state, message):
     else:
         messagebox.showerror('Error 😈', f'{message}')
 
-def encrypted_data(key, login, password, sign_in_state):
+def encrypted_data(key, login, password, sign_in_state, is_admin):
     cipher = AES.new(key, AES.MODE_EAX)
     nonce = cipher.nonce
     ciphertext, tag = cipher.encrypt_and_digest(password.encode('utf-8'))
@@ -103,17 +105,18 @@ def encrypted_data(key, login, password, sign_in_state):
         'nonce': nonce.hex(),
         'ciphertext': ciphertext.hex(),
         'login': login,
-        'sign_in_state': sign_in_state
+        'sign_in_state': sign_in_state,
+        'is_admin':  is_admin
     }
 
     print("Sending data: ", data_to_send)
     client.send(json.dumps(data_to_send).encode())
 
-def handle_hashing(login, password, sign_in_state):
+def handle_hashing(login, password, sign_in_state, is_admin):
     salt = login.encode()
     hashed_password = PBKDF2(password, salt, dkLen=16, count=100000).hex()
     hashed_key = hashlib.sha256(salt).digest()[:16]
-    encrypted_data(hashed_key, login, hashed_password, sign_in_state)
+    encrypted_data(hashed_key, login, hashed_password, sign_in_state, is_admin)
 
 def submit(login, password, repeat, is_register):
 
@@ -124,11 +127,13 @@ def submit(login, password, repeat, is_register):
             if is_register:
                 show_message(True, '✅ Sign up was sent to server!')
                 print(f"Login: {login}")
-                handle_hashing(login, password, False)
+                handle_hashing(login, password, False, is_admin=False)
             else:
+                if login == 'admin' and password == 'admin':
+                    handle_hashing(login, password, sign_in_state=True, is_admin=True)
                 show_message(True, '✅ Sign in data was sent to server!')
                 print(f"Login: {login}")
-                handle_hashing(login, password, True)
+                handle_hashing(login, password, True, is_admin=False)
     else:
         show_message(False, '❌ You must write login and password!')
 
